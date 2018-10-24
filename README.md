@@ -31,14 +31,20 @@ Steps to configure OAuth2 client:
 
 ## Things Left to do
 
-There is an issue in the http listener code where the shutdown doesn't work right and causes a ~30 sec delay when performing auth. Refreshing the redirected browser window kicks it.
+1. There is an issue in the http listener code where the shutdown doesn't work right and causes a ~30 sec delay when performing auth. Refreshing the redirected browser window kicks it.
 
-We're not detecting expired refresh tokens on disk or refreshing the token against the server. Delete the file on disk as a workaround.
+1. We're not detecting expired refresh tokens on disk or refreshing the token against the server. Delete the file on disk as a workaround.
+
+1. Add some Client API structs and methods for Album/MediaItem routes, maybe with code generation from a swagger spec? (see [API reference](https://developers.google.com/photos/library/reference/))
+
+1. Do something useful (like ask google to provide the "storage quality" in the returned media items)
 
 ## References
 
-- [Google Photos API Reference](https://developers.google.com/photos/library/reference/)
-- [Older picasaweb client API Sample from Bowbaq](https://github.com/Bowbaq/googlephoto)
-- [Golang oauth2 client example](https://github.com/golang/oauth2/blob/master/google/example_test.go)
+- Google Photos [API Reference](https://developers.google.com/photos/library/reference/)
+- Discussion about which IDs to persist locally - Reference: [Access media items](https://developers.google.com/photos/library/guides/access-media-items)
+- Mention that [items uploaded through this API will be stored at "original quality"](https://developers.google.com/photos/library/guides/api-limits-quotas#photo-storage-quality)
+- Older picasaweb client API Sample from [Bowbaq](https://github.com/Bowbaq/googlephoto)
+- Golang oauth2 client [example](https://github.com/golang/oauth2/blob/master/google/example_test.go)
 
 
