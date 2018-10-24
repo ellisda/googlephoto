@@ -29,24 +29,20 @@ func GetClient(port int) (*http.Client, error) {
 	var token oauth2.Token
 	tokenData, err := ioutil.ReadFile("./token.json")
 	if err != nil {
-		log.Println(err)
-		fmt.Println("Refresh Token not present - initiating Auth")
+		fmt.Println("Refresh Token not present - initiating User Auth")
 		token, err = GetToken(port, conf)
 		fmt.Printf("Refresh Token Retrieved: %v\n", token.RefreshToken)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 	} else {
 		fmt.Printf("Found Refresh Token locally: %v\n", tokenData)
 		err = json.Unmarshal(tokenData, &token)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 	}
 
-	//	panic("die now")
 	return conf.Client(oauth2.NoContext, &token), nil
 }
 
@@ -54,12 +50,15 @@ func GetClient(port int) (*http.Client, error) {
 // redirect from the google authentication
 // (Note: redirect URL must match project configuration on google server)
 func GetToken(port int, conf *oauth2.Config) (oauth2.Token, error) {
-	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-	browser.OpenURL(url)
-	fmt.Printf("You must allow this application access to your google photos, please see %v\n", url)
-
-	authCode, err := getAuthCode(port)
-	check(err)
+	var authCode string
+	var err error
+	if port != 0 {
+		authCode, err = getAuthCodeFromHTTPCallback(conf, port)
+		check(err)
+	} else {
+		authCode, err = getAuthCodeFromCLI(conf, port)
+		check(err)
+	}
 
 	token, err := conf.Exchange(oauth2.NoContext, authCode)
 	check(err)
@@ -71,7 +70,11 @@ func GetToken(port int, conf *oauth2.Config) (oauth2.Token, error) {
 	return *token, nil
 }
 
-func getAuthCode(port int) (string, error) {
+func getAuthCodeFromHTTPCallback(conf *oauth2.Config, port int) (string, error) {
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	browser.OpenURL(url)
+	fmt.Printf("You must allow this application access to your google photos, please see %v\n", url)
+
 	ch := make(chan string, 100)
 	mux := http.NewServeMux()
 
@@ -99,8 +102,21 @@ func getAuthCode(port int) (string, error) {
 	//Block till callback handler has retrieved the refresh token
 	authCode := <-ch
 
-	if err := s.Shutdown(context.Background()); err != http.ErrServerClosed {
+	if err := s.Shutdown(context.Background()); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Callback Shutdown returned err:%v\n", err)
 	}
+	return authCode, nil
+}
+
+func getAuthCodeFromCLI(conf *oauth2.Config, port int) (string, error) {
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	fmt.Printf("Visit the URL for the auth dialog: %v", url)
+
+	fmt.Println("Your browser should have redirected to: http://localhost/?state=state&code=<code>")
+	fmt.Print("Paste the code: ")
+
+	authCode := ""
+	fmt.Scanln(&authCode)
+
 	return authCode, nil
 }

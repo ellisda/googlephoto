@@ -1,29 +1,39 @@
 # Google Photo API client (Go WebServer)
 
 
-Here is some sample code that connects via OAuth2 to the Google Photos API, written in go.
-
-## Steps to Get Working
-
-Steps to compile and run:
-1.  Go to https://console.developers.google.com/apis/library and Create a New Project
-1. For your new project, find the "Photos Library API" in the API Library and enable it from google's side
-1. Configure new Credentials: OAuth Client ID
-    - Web Application, with a defined redirect URL (here I use http://127.0.0.1:8080/auth/google/callback)
-1. Paste your Client ID, Secret, and Redirect URL into the source code
-1. Compile and Run (note: First time, user will have to authenticate as user to google and allow access to this application)
-    - NOTE: We're only requesting the read scope 
-
+Here is some sample code that consumes the Google Photos Rest API, using OAuth2 authentication.
 
 Build
 
     go build
 
-Run
+Run with a http listener to catch the auth code
 
-    go run main.go
+    ./googlephoto
+
+Run solely on command line (user must copy / paste auth code into terminal)
+
+    ./googlephoto --port 0
+
+## Steps to Get Working
+
+Steps to configure OAuth2 client:
+1. Create a new Project at https://console.developers.google.com/apis/library
+1. Select your new project, then find and enable the "Photos Library API" at https://console.developers.google.com/apis/library
+1. Configure new Credentials at https://console.developers.google.com/apis/credentials/
+    - OAuth Client ID
+    - Web Application
+    - Provide the following "Authorized redirect url" - http://127.0.0.1:8080/auth/google/callback
+1. Paste the generated client ID and secret into the `client.go` file
+1. Run the program, authenticate to google, and grant access to the app
+1. Review your app access grants at https://myaccount.google.com/permissions
 
 
+## Things Left to do
+
+There is an issue in the http listener code where the shutdown doesn't work right and causes a ~30 sec delay when performing auth. Refreshing the redirected browser window kicks it.
+
+We're not detecting expired refresh tokens on disk or refreshing the token against the server. Delete the file on disk as a workaround.
 
 ## References
 
